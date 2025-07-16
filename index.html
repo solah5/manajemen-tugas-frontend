@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Metadata dasar dan pengaturan tampilan -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+    <!-- Judul halaman dan favicon -->
     <title>Tugasku - Organize your tasks beautifully</title>
     <link rel="icon" href="./images/logo.png" type="image/png" />
 
-    <link rel="stylesheet" href="css/style.css" />
+    <!-- File CSS utama -->
     <link rel="stylesheet" href="css/landing.css" />
+    <link rel="stylesheet" href="css/style.css" />
 
+
+    <!-- Font Awesome untuk ikon -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -18,7 +23,8 @@
 
   <body>
     <div id="app">
-      <div class="landing-container" v-if="currentView === 'landing'">
+      <!-- Landing Page -->
+      <div v-if="currentView === 'landing'" class="landing-container">
         <div class="landing-content">
           <h1 class="landing-title">
             <span class="logo-icon">📝</span>
@@ -26,14 +32,16 @@
           </h1>
           <p class="landing-tagline">Get things done with style</p>
           <div class="landing-divider"></div>
-          <button @click="goToApp" class="landing-button">
+          <button class="landing-button" @click="showLogin">
             <i class="fas fa-arrow-right"></i> Start Using Tugasku
           </button>
         </div>
       </div>
 
-      <div class="auth-overlay" v-if="currentView === 'login'">
+      <!-- Tampilan otentikasi (login/register), hanya muncul jika user belum login -->
+      <div class="auth-overlay" v-if="!isAuthenticated">
         <div class="auth-container">
+          <!-- Branding aplikasi -->
           <div class="auth-branding">
             <h1 class="app-title">
               <span class="logo-icon">📝</span>
@@ -41,6 +49,8 @@
             </h1>
             <p class="app-tagline">Organize your tasks beautifully</p>
           </div>
+
+          <!-- Tab navigasi login/register -->
           <div class="auth-tabs">
             <button
               class="auth-tab"
@@ -57,7 +67,10 @@
               Register
             </button>
           </div>
+
+          <!-- Form login dan register -->
           <div class="auth-content">
+            <!-- Form Login -->
             <form
               @submit.prevent="authTab === 'login' ? login() : register()"
               v-if="authTab === 'login'"
@@ -70,8 +83,12 @@
                 <label>Password</label>
                 <input type="password" v-model="loginForm.password" required />
               </div>
-              <button type="submit" class="btn-primary btn-full-width">Login</button>
+              <button type="submit" class="btn-primary btn-full-width">
+                Login
+              </button>
             </form>
+
+            <!-- Form Register -->
             <form @submit.prevent="register()" v-else>
               <div class="form-group">
                 <label>Username</label>
@@ -85,49 +102,379 @@
                   required
                 />
               </div>
-              <button type="submit" class="btn-primary btn-full-width">Register</button>
+              <button type="submit" class="btn-primary btn-full-width">
+                Register
+              </button>
             </form>
           </div>
         </div>
       </div>
 
-      <div
-        class="app-container"
-        v-if="currentView !== 'landing' && currentView !== 'login'"
-      >
+      <!-- Tampilan utama aplikasi, muncul setelah login -->
+      <div class="app-container" v-if="isAuthenticated">
+        <!-- Sidebar navigasi -->
         <div class="sidebar">
           <div class="sidebar-header">
             <h1 class="app-title">
               <span class="logo-icon">📝</span>
               <span class="logo-text">Tugasku</span>
             </h1>
+            <p class="app-tagline">Organize your tasks beautifully</p>
           </div>
+
+          <!-- Navigasi pengguna umum -->
           <nav class="sidebar-nav">
-             <a href="#" class="nav-item" :class="{active: currentView === 'notes'}" @click="showNotes">
+            <a
+              href="#"
+              class="nav-item"
+              :class="{active: currentView === 'notes'}"
+              @click="showNotes"
+            >
               <i class="fas fa-sticky-note"></i> <span>My Tasks</span>
             </a>
-            <a href="#" class="nav-item" :class="{active: currentView === 'addNote'}" @click="showAddNote">
-              <i class="fas fa-plus"></i> <span>Add Task</span>
+            <a
+              href="#"
+              class="nav-item"
+              :class="{active: currentView === 'addNote'}"
+              @click="showAddNote"
+            >
+              <i class="fas fa-plus"></i> <span>Add tasks</span>
             </a>
+
+            <!-- Navigasi khusus admin -->
             <template v-if="isAdmin">
               <div class="sidebar-divider"></div>
               <div class="sidebar-section-title">Admin</div>
-              <a href="#" class="nav-item" :class="{active: currentView === 'adminUsers' || currentView === 'adminUserTasks'}" @click="showAdminUsers">
+              <a
+                href="#"
+                class="nav-item"
+                :class="{active: currentView === 'adminUsers' || currentView === 'adminUserTasks'}"
+                @click="showAdminUsers"
+              >
                 <i class="fas fa-users"></i> <span>Users</span>
               </a>
+              <a
+                href="#"
+                class="nav-item"
+                :class="{active: currentView === 'adminTasks'}"
+                @click="showAdminTasks"
+              >
+                <i class="fas fa-tasks"></i> <span>All Tasks</span>
+              </a>
             </template>
+
+            <!-- PERUBAHAN: Tombol logout khusus untuk mobile, tersembunyi di desktop -->
+            <a href="#" class="nav-item nav-item-logout" @click="logout">
+              <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+            </a>
           </nav>
+
+          <!-- Tombol logout untuk desktop -->
           <div class="sidebar-footer">
             <button class="btn-logout" @click="logout">
               <i class="fas fa-sign-out-alt"></i> Logout
             </button>
           </div>
         </div>
+
+        <!-- Konten utama berdasarkan tampilan yang sedang aktif -->
         <div class="main-content">
+          <!-- Tampilan daftar tugas pengguna -->
+          <div class="notes-container" v-if="currentView === 'notes'">
+            <div class="notes-header">
+              <div>
+                <h1>My Tasks</h1>
+                <p class="page-subtitle">All your tasks in one place</p>
+              </div>
+              <button class="btn-primary" @click="showAddNote">
+                <i class="fas fa-plus"></i> New Tasks
+              </button>
             </div>
+
+            <!-- Filter berdasarkan tag -->
+            <div class="tag-filter">
+              <div class="filter-label">Filter by tag:</div>
+              <div class="tag-buttons">
+                <button
+                  v-for="tag in availableTags"
+                  :key="tag"
+                  @click="filterByTag(tag)"
+                  :class="{ 'active': selectedTag === tag }"
+                  class="tag-button"
+                >
+                  {{ tag === 'all' ? 'All Tasks' : tag }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Daftar tugas dalam bentuk grid -->
+            <div class="notes-grid">
+              <div
+                v-for="note in filteredNotes"
+                :key="note.id"
+                class="note-card"
+                :class="['status-' + note.status.replace(' ', '-'), { 'overdue': isOverdue(note.deadline), 'due-today': isDueToday(note.deadline) }]"
+              >
+                <div class="note-header">
+                  <h3>{{ note.title }}</h3>
+                  <span
+                    class="note-status"
+                    :class="note.status.replace(' ', '-')"
+                    >{{ note.status }}</span
+                  >
+                </div>
+                <div class="note-tags">
+                  <span
+                    class="tag"
+                    v-for="tag in note.tags.split(',')"
+                    :key="tag"
+                    >{{ tag.trim() }}</span
+                  >
+                </div>
+                <p class="note-preview">
+                  {{ note.body.substring(0, 150) }}{{ note.body.length > 150 ?
+                  '...' : '' }}
+                </p>
+                <div
+                  class="note-deadline"
+                  :class="{ 'text-danger': isOverdue(note.deadline) }"
+                >
+                  <i class="fas fa-clock"></i> {{ formatDeadline(note.deadline)
+                  }}
+                  <span v-if="isOverdue(note.deadline)" class="badge bg-danger"
+                    >OVERDUE</span
+                  >
+                </div>
+                <div class="note-footer">
+                  <span class="note-date"
+                    >{{ formatDate(note.updatedAt) }}</span
+                  >
+                  <div class="note-actions">
+                    <button class="btn-icon" @click="editNote(note)">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon" @click="deleteNote(note.id)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form tambah/edit tugas -->
+          <div
+            class="form-container"
+            v-if="currentView === 'addNote' || currentView === 'editNote'"
+          >
+            <div class="form-header">
+              <div>
+                <h1>
+                  {{ currentView === 'addNote' ? 'Add New Task' : 'Edit Task' }}
+                </h1>
+                <p class="page-subtitle">
+                  {{ currentView === 'addNote' ? 'Capture your new task' :
+                  'Update your task' }}
+                </p>
+              </div>
+              <button class="btn-secondary" @click="showNotes">
+                <i class="fas fa-arrow-left"></i> Back
+              </button>
+            </div>
+
+            <!-- Form tugas -->
+            <form
+              @submit.prevent="currentView === 'addNote' ? addNote() : updateNote()"
+            >
+              <div class="form-group">
+                <label>Title</label
+                ><input type="text" v-model="noteForm.title" required />
+              </div>
+              <div class="form-group">
+                <label>Tags (comma separated)</label
+                ><input type="text" v-model="noteForm.tags" />
+              </div>
+              <div class="form-group">
+                <label>Content</label
+                ><textarea v-model="noteForm.body" rows="5" required></textarea>
+              </div>
+              <div class="form-group">
+                <label>Status</label>
+                <select v-model="noteForm.status" class="form-select">
+                  <option value="pending">Pending</option>
+                  <option value="in progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Deadline</label
+                ><input type="datetime-local" v-model="noteForm.deadline" />
+              </div>
+              <button type="submit" class="btn-primary btn-full-width">
+                {{ currentView === 'addNote' ? 'Add Task' : 'Update Task' }}
+              </button>
+            </form>
+          </div>
+
+          <!-- Admin: Daftar semua user -->
+          <div
+            class="admin-container"
+            v-if="currentView === 'adminUsers' && isAdmin"
+          >
+            <div class="admin-header">
+              <h1>All Users</h1>
+              <p class="page-subtitle">Manage all registered users</p>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="user in allUsers" :key="user.id">
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.role }}</td>
+                    <td>
+                      <button
+                        class="btn-sm btn-info"
+                        @click="viewUserTasks(user.id, user.username)"
+                      >
+                        View Tasks
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Admin: Tugas milik user tertentu -->
+          <div
+            class="admin-container"
+            v-if="currentView === 'adminUserTasks' && isAdmin"
+          >
+            <div class="admin-header">
+              <div>
+                <h1>Tasks for {{ selectedUser.username }}</h1>
+                <p class="page-subtitle">All tasks created by this user</p>
+              </div>
+              <button class="btn-secondary" @click="showAdminUsers">
+                <i class="fas fa-arrow-left"></i> Back to Users
+              </button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Deadline</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="task in selectedUserTasks" :key="task.id">
+                    <td>{{ task.id }}</td>
+                    <td>{{ task.title }}</td>
+                    <td>
+                      <span
+                        class="note-status"
+                        :class="task.status.replace(' ', '-')"
+                        >{{ task.status }}</span
+                      >
+                    </td>
+                    <td>{{ formatDeadline(task.deadline) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Admin: Semua tugas dari semua user -->
+          <div
+            class="admin-container"
+            v-if="currentView === 'adminTasks' && isAdmin"
+          >
+            <div class="admin-header">
+              <h1>All Tasks</h1>
+              <p class="page-subtitle">View tasks created by all users</p>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>User</th>
+                    <th>Status</th>
+                    <th>Deadline</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="task in allTasks" :key="task.id">
+                    <td>{{ task.id }}</td>
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.username }}</td>
+                    <td>
+                      <span
+                        class="note-status"
+                        :class="task.status.replace(' ', '-')"
+                        >{{ task.status }}</span
+                      >
+                    </td>
+                    <td>{{ formatDeadline(task.deadline) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol buka chatbot -->
+        <div
+          class="chatbot-toggle"
+          v-if="isAuthenticated"
+          @click="toggleChatbot"
+        >
+          <i class="fas fa-comment-dots"></i>
+        </div>
+
+        <!-- Kotak chatbot -->
+        <div class="chatbot-container" v-if="isAuthenticated && chatbotOpen">
+          <div class="chatbot-header">
+            <h3>Task Assistant</h3>
+            <button @click="toggleChatbot"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="chatbot-messages">
+            <div
+              v-for="(msg, index) in chatMessages"
+              :key="index"
+              :class="'message-' + msg.type"
+            >
+              {{ msg.text }}
+            </div>
+          </div>
+          <div class="chatbot-input">
+            <input
+              v-model="userMessage"
+              @keyup.enter="sendChatMessage"
+              placeholder="Ask about your tasks..."
+            />
+            <button @click="sendChatMessage">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- Vue.js dan Axios untuk interaktivitas dan request ke backend -->
     <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="js/app.js"></script>

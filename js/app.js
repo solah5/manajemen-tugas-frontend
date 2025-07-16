@@ -1,13 +1,16 @@
 const { createApp } = Vue;
 
-// URL Backend API Anda di Railway
+// GANTI DENGAN URL RAILWAY ANDA JIKA BERBEDA
 const API_BASE_URL = "https://manajemen-tugas-production-847d.up.railway.app";
 
 createApp({
+  // =================================================================
+  // DATA: State Management Aplikasi
+  // =================================================================
   data() {
     return {
       // --- State Tampilan & Autentikasi ---
-      currentView: "landing", // Tampilan default adalah landing page
+      currentView: "landing",
       isAuthenticated: false,
       isAdmin: false,
       authTab: "login",
@@ -17,7 +20,7 @@ createApp({
       notes: [],
       allUsers: [],
       allTasks: [],
-      selectedUser: { id: null, username: '' },
+      selectedUser: { id: null, username: "" },
       selectedUserTasks: [],
 
       // --- Opsi & Filter ---
@@ -56,6 +59,9 @@ createApp({
     };
   },
 
+  // =================================================================
+  // CREATED: Lifecycle Hook
+  // =================================================================
   created() {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
@@ -63,25 +69,25 @@ createApp({
     if (token) {
       this.token = token;
       this.isAuthenticated = true;
-      this.isAdmin = role === 'admin';
-      // Tidak langsung fetchNotes atau ganti view, biarkan di landing page
+      this.isAdmin = role === "admin";
+      this.fetchNotes();
+      this.currentView = "notes";
+
+      this.deadlineCheckInterval = setInterval(() => {
+        if (this.isAuthenticated) {
+          this.checkDeadlines();
+        }
+      }, 3600000);
+    } else {
+      this.currentView = "landing";
     }
-    
-    // Blok else dihapus, biarkan currentView tetap 'landing'
   },
 
+  // =================================================================
+  // METHODS: Logika & Fungsi Aplikasi
+  // =================================================================
   methods: {
-    // --- METODE BARU UNTUK NAVIGASI DARI LANDING PAGE ---
-    goToApp() {
-      if (this.isAuthenticated) {
-        this.currentView = 'notes';
-        this.fetchNotes(); // Ambil data jika sudah login
-      } else {
-        this.currentView = 'login';
-      }
-    },
-
-    // --- Metode Autentikasi & Sesi (dengan URL diperbarui) ---
+    // --- Metode Autentikasi & Sesi ---
     async fetchNotes() {
       try {
         const response = await axios.get(`${API_BASE_URL}/notes`, {
@@ -99,17 +105,24 @@ createApp({
       }
     },
 
+    showLogin() {
+      this.currentView = "login";
+    },
+
     async login() {
       try {
-        const response = await axios.post(`${API_BASE_URL}/login`, this.loginForm);
+        const response = await axios.post(
+          `${API_BASE_URL}/login`,
+          this.loginForm
+        );
         this.token = response.data.data.token;
-        this.isAdmin = response.data.data.role === 'admin';
+        this.isAdmin = response.data.data.role === "admin";
         localStorage.setItem("token", this.token);
         localStorage.setItem("role", response.data.data.role);
 
         this.isAuthenticated = true;
-        this.currentView = "notes"; // Langsung ke dashboard setelah login
         this.fetchNotes();
+        this.currentView = "notes";
         this.loginForm = { username: "", password: "" };
       } catch (error) {
         alert("Login gagal. Periksa kembali username dan password Anda.");
@@ -124,7 +137,10 @@ createApp({
         this.authTab = "login";
         this.registerForm = { username: "", password: "" };
       } catch (error) {
-        if (error.response && error.response.data.message === "Username already exists") {
+        if (
+          error.response &&
+          error.response.data.message === "Username already exists"
+        ) {
           alert("Username sudah digunakan. Silakan pilih yang lain.");
         } else {
           alert("Registrasi gagal. Silakan coba lagi.");
@@ -142,7 +158,7 @@ createApp({
       this.notes = [];
       this.allUsers = [];
       this.allTasks = [];
-      this.currentView = "landing"; // Kembali ke landing page setelah logout
+      this.currentView = "login";
     },
 
     // --- Metode CRUD untuk Tugas (Notes) ---
@@ -162,9 +178,13 @@ createApp({
 
     async updateNote() {
       try {
-        await axios.put(`${API_BASE_URL}/notes/${this.noteForm.id}`, this.noteForm, {
-          headers: { Authorization: `Bearer ${this.token}` },
-        });
+        await axios.put(
+          `${API_BASE_URL}/notes/${this.noteForm.id}`,
+          this.noteForm,
+          {
+            headers: { Authorization: `Bearer ${this.token}` },
+          }
+        );
         this.fetchNotes();
         this.showNotes();
         this.resetNoteForm();
@@ -214,7 +234,7 @@ createApp({
 
     showNotes() {
       this.currentView = "notes";
-      // Tidak perlu fetchNotes lagi di sini karena sudah dipanggil saat navigasi
+      this.fetchNotes();
     },
 
     showAddNote() {
@@ -230,7 +250,13 @@ createApp({
 
     formatDeadline(deadline) {
       if (!deadline) return "No deadline";
-      const options = { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
+      const options = {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      };
       return new Date(deadline).toLocaleDateString(undefined, options);
     },
 
@@ -238,7 +264,7 @@ createApp({
       if (!deadline) return false;
       return new Date(deadline) < new Date();
     },
-    
+
     isDueToday(deadline) {
       if (!deadline) return false;
       const today = new Date().toISOString().slice(0, 10);
@@ -263,7 +289,9 @@ createApp({
       const today = new Date().toISOString().slice(0, 10);
       const tasksDueToday = this.notes.filter((note) => {
         if (!note.deadline) return false;
-        return note.deadline.slice(0, 10) === today && note.status !== "completed";
+        return (
+          note.deadline.slice(0, 10) === today && note.status !== "completed"
+        );
       });
 
       if (tasksDueToday.length > 0) {
@@ -289,7 +317,7 @@ createApp({
       const taskList = tasks.map((task) => `• ${task.title}`).join("\n");
       const notification = new Notification("📅 Tasks Due Today", {
         body: `You have ${tasks.length} task(s) due today:\n${taskList}`,
-        icon: "./images/logo.png", // Path ke ikon
+        icon: "/path/to/your/icon.png",
       });
       setTimeout(() => notification.close(), 10000);
     },
@@ -304,7 +332,7 @@ createApp({
       const allTags = new Set();
       this.notes.forEach((note) => {
         if (note.tags) {
-          note.tags.split(",").forEach(tag => allTags.add(tag.trim()));
+          note.tags.split(",").forEach((tag) => allTags.add(tag.trim()));
         }
       });
       this.availableTags = ["all", ...allTags];
@@ -316,11 +344,16 @@ createApp({
         this.filteredNotes = this.notes;
       } else {
         this.filteredNotes = this.notes.filter(
-          (note) => note.tags && note.tags.split(",").map((t) => t.trim()).includes(tag)
+          (note) =>
+            note.tags &&
+            note.tags
+              .split(",")
+              .map((t) => t.trim())
+              .includes(tag)
         );
       }
     },
-    
+
     // --- Metode Chatbot ---
     toggleChatbot() {
       this.chatbotOpen = !this.chatbotOpen;
@@ -345,16 +378,26 @@ createApp({
         return this.getWorkloadSummary();
       }
 
-      const statusMatch = input.match(/(how many|what|show).*(pending|in progress|completed|overdue)/i);
+      const statusMatch = input.match(
+        /(how many|what|show).*(pending|in progress|completed|overdue)/i
+      );
       if (statusMatch) {
         const statusPhrase = statusMatch[2];
-        let statusFilter = statusPhrase.includes("progress") ? "in progress" : statusPhrase;
-        const tasks = (statusFilter === "overdue")
-            ? this.notes.filter(note => this.isOverdue(note.deadline))
-            : this.notes.filter(note => note.status === statusFilter);
-        
+        let statusFilter = statusPhrase.includes("progress")
+          ? "in progress"
+          : statusPhrase;
+        const tasks =
+          statusFilter === "overdue"
+            ? this.notes.filter((note) => this.isOverdue(note.deadline))
+            : this.notes.filter((note) => note.status === statusFilter);
+
         if (tasks.length === 0) return `You have no ${statusPhrase} tasks.`;
-        return `You have ${tasks.length} ${statusPhrase} tasks:\n${tasks.slice(0, 5).map(t => `• ${t.title}`).join("\n")}${tasks.length > 5 ? `\n...and ${tasks.length - 5} more` : ""}`;
+        return `You have ${tasks.length} ${statusPhrase} tasks:\n${tasks
+          .slice(0, 5)
+          .map((t) => `• ${t.title}`)
+          .join("\n")}${
+          tasks.length > 5 ? `\n...and ${tasks.length - 5} more` : ""
+        }`;
       }
 
       const dateMatch = input.match(/(today|tomorrow|this week|next week)/i);
@@ -362,28 +405,37 @@ createApp({
         const period = dateMatch[1].toLowerCase();
         const dateRange = this.parseNaturalDate(period);
         if (!dateRange) return "Saya tidak mengerti periode waktu tersebut.";
-        const tasks = this.notes.filter(note => {
+        const tasks = this.notes.filter((note) => {
           if (!note.deadline) return false;
           const taskDate = new Date(note.deadline);
           taskDate.setHours(0, 0, 0, 0);
           return taskDate >= dateRange.start && taskDate <= dateRange.end;
         });
         return tasks.length
-          ? `Tugas yang jatuh tempo ${period}:\n${tasks.map(t => `• ${t.title} (${this.formatDate(t.deadline)})`).join("\n")}`
+          ? `Tugas yang jatuh tempo ${period}:\n${tasks
+              .map((t) => `• ${t.title} (${this.formatDate(t.deadline)})`)
+              .join("\n")}`
           : `Tidak ada tugas yang jatuh tempo ${period}.`;
       }
-      
+
       const taskSearch = input.match(/(find|search).*("(.+?)"|'(.+?)'|(.+))/);
       if (taskSearch) {
-        const keyword = (taskSearch[3] || taskSearch[4] || taskSearch[5]).trim();
+        const keyword = (
+          taskSearch[3] ||
+          taskSearch[4] ||
+          taskSearch[5]
+        ).trim();
         if (!keyword) return "Sebutkan apa yang ingin dicari.";
-        const results = this.notes.filter(note => 
-          note.title.toLowerCase().includes(keyword) || 
-          (note.tags && note.tags.toLowerCase().includes(keyword)) ||
-          note.body.toLowerCase().includes(keyword)
+        const results = this.notes.filter(
+          (note) =>
+            note.title.toLowerCase().includes(keyword) ||
+            (note.tags && note.tags.toLowerCase().includes(keyword)) ||
+            note.body.toLowerCase().includes(keyword)
         );
         return results.length
-          ? `Ditemukan ${results.length} tugas:\n${results.map(t => `• ${t.title} (${t.status})`).join("\n")}`
+          ? `Ditemukan ${results.length} tugas:\n${results
+              .map((t) => `• ${t.title} (${t.status})`)
+              .join("\n")}`
           : `Tidak ada tugas yang cocok dengan "${keyword}".`;
       }
 
@@ -391,14 +443,25 @@ createApp({
         return `Saya bisa membantu dengan:\n • Status tugas: "Show pending tasks"\n • Tanggal jatuh tempo: "What's due tomorrow?"\n • Pencarian: "Find tasks about 'design'"\n • Beban kerja: "Give me a summary"`;
       }
 
-      return "I'm your task assistant! Try asking:\n" + "• 'What's due today?'\n" + "• 'Show me overdue tasks'\n" + "• 'Find tasks about database'";
+      return (
+        "I'm your task assistant! Try asking:\n" +
+        "• 'What's due today?'\n" +
+        "• 'Show me overdue tasks'\n" +
+        "• 'Find tasks about database'"
+      );
     },
 
     getWorkloadSummary() {
       const pending = this.notes.filter((n) => n.status === "pending").length;
-      const inProgress = this.notes.filter((n) => n.status === "in progress").length;
-      const overdue = this.notes.filter((n) => this.isOverdue(n.deadline)).length;
-      const completed = this.notes.filter((n) => n.status === "completed").length;
+      const inProgress = this.notes.filter(
+        (n) => n.status === "in progress"
+      ).length;
+      const overdue = this.notes.filter((n) =>
+        this.isOverdue(n.deadline)
+      ).length;
+      const completed = this.notes.filter(
+        (n) => n.status === "completed"
+      ).length;
       return `📊 Your Workload:\n ⏳ Pending: ${pending} tasks\n 🚧 In Progress: ${inProgress} tasks\n 🔴 Overdue: ${overdue} tasks\n ✅ Completed: ${completed} tasks`;
     },
 
@@ -455,14 +518,16 @@ createApp({
         if (error.response && error.response.status === 403) this.logout();
       }
     },
-    
+
     async viewUserTasks(userId, username) {
       if (!this.isAdmin) return;
       try {
         if (this.allTasks.length === 0) {
           await this.fetchAllTasks();
         }
-        this.selectedUserTasks = this.allTasks.filter(task => task.userId === userId);
+        this.selectedUserTasks = this.allTasks.filter(
+          (task) => task.userId === userId
+        );
         this.selectedUser = { id: userId, username: username };
         this.currentView = "adminUserTasks";
       } catch (error) {
@@ -470,19 +535,18 @@ createApp({
         alert("Gagal mengambil tugas pengguna.");
       }
     },
-    
+
     showAdminUsers() {
       if (!this.isAdmin) return;
       this.currentView = "adminUsers";
       this.fetchAllUsers();
       this.fetchAllTasks();
     },
-    
+
     showAdminTasks() {
       if (!this.isAdmin) return;
       this.currentView = "adminTasks";
       this.fetchAllTasks();
     },
-
   },
 }).mount("#app");
