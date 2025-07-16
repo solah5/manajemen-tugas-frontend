@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Tugasku - Organize your tasks beautifully</title>
+    <link rel="icon" href="./images/logo.png" type="image/png" />
+
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/landing.css" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+
+  <body>
+    <div id="app">
+      <div class="landing-container" v-if="currentView === 'landing'">
+        <div class="landing-content">
+          <h1 class="landing-title">
+            <span class="logo-icon">📝</span>
+            <span class="logo-text">Tugasku</span>
+          </h1>
+          <p class="landing-tagline">Get things done with style</p>
+          <div class="landing-divider"></div>
+          <button @click="goToApp" class="landing-button">
+            <i class="fas fa-arrow-right"></i> Start Using Tugasku
+          </button>
+        </div>
+      </div>
+
+      <div class="auth-overlay" v-if="currentView === 'login'">
+        <div class="auth-container">
+          <div class="auth-branding">
+            <h1 class="app-title">
+              <span class="logo-icon">📝</span>
+              <span class="logo-text">Tugasku</span>
+            </h1>
+            <p class="app-tagline">Organize your tasks beautifully</p>
+          </div>
+          <div class="auth-tabs">
+            <button
+              class="auth-tab"
+              :class="{ active: authTab === 'login' }"
+              @click="authTab = 'login'"
+            >
+              Login
+            </button>
+            <button
+              class="auth-tab"
+              :class="{ active: authTab === 'register' }"
+              @click="authTab = 'register'"
+            >
+              Register
+            </button>
+          </div>
+          <div class="auth-content">
+            <form
+              @submit.prevent="authTab === 'login' ? login() : register()"
+              v-if="authTab === 'login'"
+            >
+              <div class="form-group">
+                <label>Username</label>
+                <input type="text" v-model="loginForm.username" required />
+              </div>
+              <div class="form-group">
+                <label>Password</label>
+                <input type="password" v-model="loginForm.password" required />
+              </div>
+              <button type="submit" class="btn-primary btn-full-width">Login</button>
+            </form>
+            <form @submit.prevent="register()" v-else>
+              <div class="form-group">
+                <label>Username</label>
+                <input type="text" v-model="registerForm.username" required />
+              </div>
+              <div class="form-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  v-model="registerForm.password"
+                  required
+                />
+              </div>
+              <button type="submit" class="btn-primary btn-full-width">Register</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="app-container"
+        v-if="currentView !== 'landing' && currentView !== 'login'"
+      >
+        <div class="sidebar">
+          <div class="sidebar-header">
+            <h1 class="app-title">
+              <span class="logo-icon">📝</span>
+              <span class="logo-text">Tugasku</span>
+            </h1>
+          </div>
+          <nav class="sidebar-nav">
+             <a href="#" class="nav-item" :class="{active: currentView === 'notes'}" @click="showNotes">
+              <i class="fas fa-sticky-note"></i> <span>My Tasks</span>
+            </a>
+            <a href="#" class="nav-item" :class="{active: currentView === 'addNote'}" @click="showAddNote">
+              <i class="fas fa-plus"></i> <span>Add Task</span>
+            </a>
+            <template v-if="isAdmin">
+              <div class="sidebar-divider"></div>
+              <div class="sidebar-section-title">Admin</div>
+              <a href="#" class="nav-item" :class="{active: currentView === 'adminUsers' || currentView === 'adminUserTasks'}" @click="showAdminUsers">
+                <i class="fas fa-users"></i> <span>Users</span>
+              </a>
+            </template>
+          </nav>
+          <div class="sidebar-footer">
+            <button class="btn-logout" @click="logout">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+          </div>
+        </div>
+        <div class="main-content">
+            </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

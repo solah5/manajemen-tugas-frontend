@@ -1,0 +1,224 @@
+/* Landing Page Styles */
+:root {
+  --primary: #faae2b;
+  --primary-dark: #e09820; /* Penambahan: Warna hover untuk tombol */
+  --secondary: #8bd3dd;
+  --tertiary: #ffbdc4;
+  --background: hsl(156, 24%, 96%);
+  --dark: #00473e;
+  --light: #ffffff;
+}
+
+/* Penambahan: Animasi untuk latar belakang dan elemen */
+@keyframes animatedGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #ffbdc4, #8bd3dd, #faae2b);
+  background-size: 200% 200%; /* Diperbesar untuk efek animasi */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--dark);
+  animation: animatedGradient 15s ease infinite; /* Menerapkan animasi gradient */
+}
+
+.landing-container {
+  width: 100%;
+  max-width: 550px; /* Sedikit diperlebar untuk konten baru */
+  padding: 20px;
+}
+
+.landing-content {
+  background: var(--background);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  /* Menerapkan animasi pada seluruh kontainer */
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.landing-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.logo-icon {
+  font-size: 36px;
+  margin-right: 12px;
+}
+
+.logo-text {
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  font-size: 32px;
+}
+
+.landing-tagline {
+  color: var(--dark);
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.landing-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 30px 0;
+}
+
+/* --- Penambahan: Bagian Fitur --- */
+.features-section {
+  display: flex;
+  justify-content: space-around;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.feature-item {
+  flex: 1;
+}
+
+.feature-item i {
+  font-size: 28px;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.feature-item p {
+  font-size: 14px;
+  margin: 0;
+  color: var(--dark);
+  font-weight: 500;
+}
+
+.landing-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary);
+  color: var(--dark);
+  padding: 14px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.landing-button i {
+  margin-right: 8px;
+}
+
+.landing-button:hover {
+  background-color: var(--primary-dark); /* Menggunakan variabel baru */
+  transform: translateY(-3px); /* Efek angkat lebih terasa */
+  box-shadow: 0 8px 20px rgba(250, 174, 43, 0.35);
+}
+
+/* Peningkatan Aksesibilitas: Gaya saat tombol difokuskan dengan keyboard */
+.landing-button:focus {
+  outline: 3px solid var(--secondary);
+  outline-offset: 3px;
+}
+
+/* --- Penambahan: Footer --- */
+.landing-footer {
+  margin-top: 35px;
+  text-align: center;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.social-links a {
+  color: var(--dark);
+  margin: 0 10px;
+  font-size: 20px;
+  text-decoration: none;
+  transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.social-links a:hover {
+  color: var(--primary);
+  transform: scale(1.1);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .landing-container {
+    padding: 15px;
+  }
+  .landing-content {
+    padding: 30px 20px;
+  }
+  .logo-icon {
+    font-size: 30px;
+  }
+  .logo-text {
+    font-size: 26px;
+  }
+  .landing-tagline {
+    font-size: 16px;
+  }
+  .landing-button {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-content {
+    padding: 25px 15px;
+  }
+  .logo-text {
+    font-size: 24px;
+  }
+  .landing-tagline {
+    font-size: 15px;
+  }
+  /* Penyesuaian bagian fitur untuk layar kecil */
+  .features-section {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .landing-button {
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+}
